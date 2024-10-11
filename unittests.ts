@@ -62,7 +62,7 @@ class TestCase {
 		this.name = name;
 	}
 
-	run(r = new TestResult) {
+	run(r?: TestResult) {
 		this.setUp();
 		const result = r || new TestResult();
 		result.testStarted();
