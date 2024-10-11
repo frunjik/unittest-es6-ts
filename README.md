@@ -2,6 +2,6 @@
 minimal es6 unittest with typescript
 
 > tsc --target ES6 index.ts
-> node index.mjs
+> node index.js
 
 requirements: https://www.typescriptlang.org/
