@@ -66,7 +66,7 @@ class TestResult {
     runCount = 0;
     failCount = 0;
 
-    constructor(private preventLogging = false) {}
+    constructor(private silent = false, public readonly verbose = false, public readonly log?: Function) {}
 
     testStarted() {
         this.runCount++;
@@ -74,7 +74,7 @@ class TestResult {
 
     testFailed(test?: TestCase, error?: any) {
         this.failCount++;
-        if (!this.preventLogging) {
+        if (!this.silent) {
             test  && console.log(`${test?.name}`);
             error && console.error(error);
         }
@@ -104,7 +104,11 @@ class TestCase {
         }
         this.tearDown();
 
-        // console.log(`Ok - ${this.constructor.name}.${this.name}`);
+        if (result.verbose) {
+
+            const log = result.log ?? console.log;
+            log(`Ok - ${this.constructor.name}.${this.name}`);
+        }
 
         return result;
     }
