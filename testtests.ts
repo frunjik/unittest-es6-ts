@@ -78,7 +78,7 @@ class TestCaseTest extends TestCase {
 
 function runTests(log: Function) {
     const verbose = true;       // show all ran tests
-    const silent  = true;       // dont log errors ..
+    const silent  = false;      // dont log errors ..
 
     const r = new TestResult(silent, verbose, log);
     log(new TestSuite(TestCaseTest).run(r).summary());

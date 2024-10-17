@@ -74,9 +74,10 @@ class TestResult {
 
     testFailed(test?: TestCase, error?: any) {
         this.failCount++;
-        if (!this.silent) {
-            test  && console.log(`${test?.name}`);
-            error && console.error(error);
+        if (!this.silent && (test || error)) {
+            const log = this.log ?? console.log;
+            test  && log(`${test?.name}`);
+            error && log(error.toString());
         }
     }
 
