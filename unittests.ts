@@ -1,85 +1,115 @@
-function assert(expression: any, message: string) {
-	if (!!expression) return;
-	throw new Error(message || `assertion failed: ${expression}`);
+function assert(expression: any, message: string = '') {
+    if (!!expression) return;
+    throw new Error(message || `assertion failed: ${expression}`);
 }
 
 function assertEqual(actual: any, expected: any, message: string = '') {
-	if (actual === expected) return;
-	const m = message || 'assertion failed';
-	throw new Error(`${m} expected "${expected}", but got "${actual}"`);
+    if (actual === expected) return;
+    const m = message || 'assertion failed';
+    throw new Error(
+        `${m} expected "${expected?.toString() ?? expected}", but got "${
+            actual?.toString() ?? actual
+        }"`
+    );
 }
 
 class TestSuite {
+    classes: any[] = [];
 
-    tests: TestCase[];
+    constructor(testClass?: any) {
+        testClass && this.addTests(testClass);
+    }
 
-	constructor(testClass?: any) {
-		this.tests = [];
-		testClass && this.addTests(testClass);
-	}
-	
-	addTest(test: TestCase) {
-		this.tests.push(test);
-	}
+    addTest(test: TestCase) {
+        this.classes.push(test);
+    }
 
-	addTests(testClass: any) {
-		Object.getOwnPropertyNames(testClass.prototype)
-			.filter(m => m.startsWith('test'))
-			.forEach(m => this.addTest(new testClass(m)))
-	}
+    addTests(testClass: any) {
+        if (Array.isArray(testClass)) {
+            for (let c of testClass) this.addTests(c);
+        } else {
+            this.addTest(testClass);
+        }
+    }
 
-	run(r?: TestResult) {
-		const result = r || new TestResult();
-		this.tests.forEach(test => test.run(result));
-		return result;
-	}
+    run(r?: TestResult) {
+        const result = r || new TestResult();
+        try {
+            this.buildTestCases().forEach((test) => {
+                test.run(result)
+            });
+        } catch(e) {
+            console.log(`Error in Test Framework !!! - panic`);
+            console.error(e);
+            throw e;
+        }
+        return result;
+    }
+
+    buildTestCases(): TestCase[] {
+        const result: TestCase[] = [];
+        this.classes.forEach((c) => {
+            if (c.prototype) {
+                Object.getOwnPropertyNames(c.prototype)
+                    .filter((m) => m.startsWith('test'))
+                    .forEach((m) => result.push(new c(m)));
+            } else {
+                // its (already) a TestCase instance ... just add it
+                result.push(c);
+            }
+        });
+        return result;
+    }
 }
 
 class TestResult {
-
     runCount = 0;
     failCount = 0;
 
-	testStarted() {
-		this.runCount++;
-	}
-	
-	testFailed(test?: TestCase, error?: any) {
-		this.failCount++;
-		// console.log(`${test.name} - ${error}`);
-	}
+    testStarted() {
+        this.runCount++;
+    }
 
-	summary() {
-		return `${this.runCount} run, ${this.failCount} failed`;
-	}
+    testFailed(test?: TestCase, error?: any) {
+        this.failCount++;
+        if (test?.name !== 'testBrokenMethod') {
+            test  && console.log(`${test?.name}`);
+            error && console.error(error);
+        }
+    }
+
+    summary() {
+        return `${this.runCount} run, ${this.failCount} failed`;
+    }
 }
 
 class TestCase {
-
     name: string;
 
-	constructor(name: string) {
-		this.name = name;
-	}
+    constructor(name: string) {
+        this.name = name;
+    }
 
-	run(r?: TestResult) {
-		this.setUp();
-		const result = r || new TestResult();
-		result.testStarted();
-		try {
-			this[this.name]();
-		} catch (error) {
-			result.testFailed(this, error);
-		}
-		this.tearDown();
-		return result;
-	}
+    run(r?: TestResult) {
+        this.setUp();
+        const result = r || new TestResult();
+        result.testStarted();
+        try {
+            (this as any)[this.name]();
+        } catch (error) {
+            // console.error(`FAIL - ${this.constructor.name}.${this.name}`);
+            result.testFailed(this, error);
+        }
+        this.tearDown();
 
-	setUp() {
-	}
+        // console.log(`Ok - ${this.constructor.name}.${this.name}`);
 
-	tearDown() {
-	}
+        return result;
+    }
+
+    setUp() {}
+
+    tearDown() {}
 }
 
 export { TestCase, TestResult, TestSuite, assert, assertEqual };
