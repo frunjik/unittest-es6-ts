@@ -66,13 +66,15 @@ class TestResult {
     runCount = 0;
     failCount = 0;
 
+    constructor(private preventLogging = false) {}
+
     testStarted() {
         this.runCount++;
     }
 
     testFailed(test?: TestCase, error?: any) {
         this.failCount++;
-        if (test?.name !== 'testBrokenMethod') {
+        if (!this.preventLogging) {
             test  && console.log(`${test?.name}`);
             error && console.error(error);
         }

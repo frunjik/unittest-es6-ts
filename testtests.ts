@@ -26,6 +26,10 @@ class WasRun extends TestCase {
 }
 
 class TestCaseTest extends TestCase {
+    createTestResultWithoutLogging() {
+        return new TestResult(true);
+    }
+
     testTemplateMethod() {
         const test = new WasRun("testMethod");
         test.run();
@@ -39,24 +43,26 @@ class TestCaseTest extends TestCase {
     }
 
     testFailedResultFormatting() {
-        const result = new TestResult();
+        const result = new TestResult(true);
         result.testStarted();
-        result.testFailed(({name: 'test'} as TestCase));
+        result.testFailed(({name: 'DUMMYTESTCASE'} as TestCase));
         assertEqual(result.summary(), "1 run, 1 failed", "summary");
     }
 
     testFailedResult() {
         const test = new WasRun("testBrokenMethod");
-        const result = test.run();
-        assertEqual(result.summary(), "1 run, 1 failed", "summary");
+        const r = this.createTestResultWithoutLogging();
+        test.run(r);
+        assertEqual(r.summary(), "1 run, 1 failed", "summary");
     }
 
     testSuite() {
         const suite = new TestSuite();
         suite.addTest(new WasRun("testMethod"));
         suite.addTest(new WasRun("testBrokenMethod"));
-        const result = suite.run();
-        assertEqual(result.summary(), "2 run, 1 failed", "summary");
+        const r = new TestResult(true);
+        suite.run(r);
+        assertEqual(r.summary(), "2 run, 1 failed", "summary");
     }
 
     testAddTests() {
